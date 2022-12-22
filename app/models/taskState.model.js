@@ -1,7 +1,7 @@
 module.exports = (sequelize, Sequelize) => {
   const TaskState = sequelize.define("taskState", {
     IdTaskState: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER,
     },
     Name: {
       type: Sequelize.TEXT
@@ -9,7 +9,7 @@ module.exports = (sequelize, Sequelize) => {
     Description: {
       type: Sequelize.TEXT
     },
-  });
+  }, { freezeTableName: true });
 
   return TaskState;
 };

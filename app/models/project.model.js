@@ -1,10 +1,10 @@
 module.exports = (sequelize, Sequelize) => {
   const Project = sequelize.define("project", {
     IdProject: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER,
     },
     IdClient: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     Name: {
       type: Sequelize.STRING
@@ -25,9 +25,9 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.DATE
     },
     Enabled: {
-      type: Sequelize.BOOL
+      type: Sequelize.BOOLEAN
     },
-  });
+  }, { freezeTableName: true });
 
   return Project;
 };

@@ -24,7 +24,11 @@ db.role = require("./role.model.js")(sequelize, Sequelize);
 db.task = require("./task.model.js")(sequelize, Sequelize);
 db.project = require("./project.model.js")(sequelize, Sequelize);
 db.taskState = require("./taskState.model.js")(sequelize, Sequelize);
+db.projectTaskState = require("./projectTaskState.model.js")(sequelize, Sequelize);
 db.userTask = require("./userTask.model.js")(sequelize, Sequelize);
 db.userProjectRole = require("./userProjectRole.model.js")(sequelize, Sequelize);
 
-module.exports = db;
+module.exports = {
+  db,
+  sequelize,
+};

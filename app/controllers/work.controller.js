@@ -1,148 +1,179 @@
-const db = require("../models");
-const Project = db.project;
-// const Op = db.Sequelize.Op;
+const { sequelize } = require("../models");
 
-exports.createProject = (req, res) => {
+exports.getUsers = async (req, res) => {
+  const [users, metadata] = await sequelize.query("SELECT * FROM User;");
+  res.json(users);
+}
+
+exports.getProjects = async (req, res) => {
+  const IdUser = req.query.userId;
+  const [projects] = await sequelize.query(`SELECT IdProject, Name, Description FROM Project WHERE IdProject IN (SELECT IdProject FROM UserProjectRole WHERE IdUser = '${IdUser}');`);
+  // Left Join для колонок і тасок
+  res.send({projects});
+}
+
+exports.getColumns = async (req, res) => {
+  const IdProject = req.query.projectId;
+  const search = req.query.search;
+  const [columns] = await sequelize.query(`SELECT TaskState.IdTaskState, TaskState.Name AS TaskStateName, Task.Name AS TaskName, 
+  Task.IdTask, Task.Description, Task.Work FROM TaskState LEFT JOIN Task ON TaskState.IdTaskState = Task.TaskStateId 
+  WHERE ${search.length > 0 ? `TaskState.Name LIKE '%${search}%' AND` : ''} IdTaskState IN (SELECT IdTaskState FROM ProjectTaskState WHERE IdProject = '${IdProject}');`);
+  res.send({columns});
+}
+
+exports.createProject = async (req, res) => {
   // Validate request
-  if (!req.body.title) {
+  if (!req.body.data.name) {
+    res.status(400).send({
+      message: "Content can not be empty!"
+    });
+    return;
+  }
+  const name = req.body.data.name;
+  const description = req.body.data.description;
+  const IdUser = req.body.data.userId;
+
+  try {
+    const [project] = await sequelize.query(
+      `INSERT INTO Project (IdClient, Name, Description, StartDate, EndDate, CreatedAt, UpdatedAt, Enabled) VALUES (0, '${name}', '${description}', NULL, NULL, now(), NULL, 1);`
+    );
+    const [userProjectRole] = await sequelize.query(
+      `INSERT INTO UserProjectRole (IdRole, IdProject, IdUser) VALUES (1, '${project}', '${IdUser}');`
+    );
+    res.send({ status: 'Project created, UserProjectRole created'});
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+exports.createColumn = async (req, res) => {
+  // Validate request
+  if (!req.body.data.IdProject) {
     res.status(400).send({
       message: "Content can not be empty!"
     });
     return;
   }
 
-  const project = {
-    IdClient: 0,
-    Name: req.body.name,
-    Description: req.body.description,
-    StartDate: null,
-    EndDate: null,
-    CreatedAt: new Date(),
-    UpdatedAt: null,
-    Enabled: true,
-  };
+  try {
+    const name = req.body.data.name;
+    const description = req.body.data.description;
+    const IdProject = req.body.data.IdProject;
 
-  Project.create(project)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while creating the Project."
-      });
-    });
+    const [taskState] = await sequelize.query(
+      `INSERT INTO TaskState (Name, Description) VALUES ('${name}', '${description}');`
+    );
+    const [userProjectRole] = await sequelize.query(
+      `INSERT INTO ProjectTaskState (IdProject, IdTaskState) VALUES ('${IdProject}', '${taskState}');`
+    );
+    res.send({ status: 'Column created, ProjectTaskState created'});
+  } catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
 };
 
-// exports.findAll = (req, res) => {
-//   const title = req.query.title;
-//   var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
+exports.createTask = async (req, res) => {
+  console.log(req.body);
+  // Validate request
+  if (!req.body.data.name) {
+    res.status(400).send({
+      message: "Content can not be empty!"
+    });
+    return;
+  }
 
-//   Tutorial.findAll({ where: condition })
-//     .then(data => {
-//       res.send(data);
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message:
-//           err.message || "Some error occurred while retrieving tutorials."
-//       });
-//     });
-// };
+  try {
+    const name = req.body.data.name;
+    const description = req.body.data.description;
+    const work = req.body.data.work;
+    const IdProject = req.body.data.IdProject;
+    const IdTaskState = req.body.data.IdTaskState;
+    await sequelize.query(
+      `INSERT INTO Task (Name, Description, Work, IdProject, TaskStateId, StartDate, EndDate, CreatedAt, UpdatedAt, Enabled) 
+      VALUES ('${name}', '${description}', '${work}', '${IdProject}', ${IdTaskState}, NULL, NULL, now(), NULL, 1);`
+    );
+    res.send({ status: 'Task created.'});
+  } catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
+};
 
-// exports.findOne = (req, res) => {
-//   const id = req.params.id;
+exports.updateTask = async (req, res) => {
+  console.log(req.body);
+  // Validate request
+  if (!req.body.data.name) {
+    res.status(400).send({
+      message: "Content can not be empty!"
+    });
+    return;
+  }
 
-//   Tutorial.findByPk(id)
-//     .then(data => {
-//       if (data) {
-//         res.send(data);
-//       } else {
-//         res.status(404).send({
-//           message: `Cannot find Tutorial with id=${id}.`
-//         });
-//       }
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message: "Error retrieving Tutorial with id=" + id
-//       });
-//     });
-// };
+  try {
+    const name = req.body.data.name;
+    const description = req.body.data.description;
+    const work = req.body.data.work;
+    const IdTask = req.body.data.IdTask;
+    const TaskStateId = req.body.data.TaskStateId;
 
-// exports.update = (req, res) => {
-//   const id = req.params.id;
+    await sequelize.query(
+      `UPDATE Task SET Name = '${name}', Description = '${description}', Work = '${work}', TaskStateId = '${TaskStateId}', UpdatedAt = now() WHERE IdTask = '${IdTask}'`
+    );
+    res.send({ status: 'Task updated.'});
+  } catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
+};
 
-//   Tutorial.update(req.body, {
-//     where: { id: id }
-//   })
-//     .then(num => {
-//       if (num == 1) {
-//         res.send({
-//           message: "Tutorial was updated successfully."
-//         });
-//       } else {
-//         res.send({
-//           message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
-//         });
-//       }
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message: "Error updating Tutorial with id=" + id
-//       });
-//     });
-// };
 
-// exports.delete = (req, res) => {
-//   const id = req.params.id;
+exports.deleteColumn = async(req, res) => {
+  console.log(`FIRE`);
+  // Validate request
+  if (!req.query.IdTaskState) {
+    res.status(400).send({
+      message: "Content can not be empty!"
+    });
+    return;
+  }
 
-//   Tutorial.destroy({
-//     where: { id: id }
-//   })
-//     .then(num => {
-//       if (num == 1) {
-//         res.send({
-//           message: "Tutorial was deleted successfully!"
-//         });
-//       } else {
-//         res.send({
-//           message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//         });
-//       }
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message: "Could not delete Tutorial with id=" + id
-//       });
-//     });
-// };
+  try {
+    const IdTaskState = req.query.IdTaskState;
+    await sequelize.query(
+      `DELETE FROM Task WHERE TaskStateId=${IdTaskState};`
+    );
+    await sequelize.query(
+      `DELETE FROM ProjectTaskState WHERE IdTaskState=${IdTaskState};`
+    );
+    await sequelize.query(
+      `DELETE FROM TaskState WHERE IdTaskState=${IdTaskState};`
+    );
+    res.send({ status: 'Column deleted, ProjectTaskState deleted'});
+  } catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
+};
 
-// exports.deleteAll = (req, res) => {
-//   Tutorial.destroy({
-//     where: {},
-//     truncate: false
-//   })
-//     .then(nums => {
-//       res.send({ message: `${nums} Tutorials were deleted successfully!` });
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message:
-//           err.message || "Some error occurred while removing all tutorials."
-//       });
-//     });
-// };
+exports.deleteTask = async(req, res) => {
+  console.log(`FIRE`);
+  // Validate request
+  if (!req.query.IdTask) {
+    res.status(400).send({
+      message: "Content can not be empty!"
+    });
+    return;
+  }
 
-// exports.findAllPublished = (req, res) => {
-//   Tutorial.findAll({ where: { published: true } })
-//     .then(data => {
-//       res.send(data);
-//     })
-//     .catch(err => {
-//       res.status(500).send({
-//         message:
-//           err.message || "Some error occurred while retrieving tutorials."
-//       });
-//     });
-// };
+  try {
+    const IdTask = req.query.IdTask;
+    await sequelize.query(
+      `DELETE FROM Task WHERE IdTask=${IdTask};`
+    );
+    res.send({ status: 'Task deleted'});
+  } catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
+};

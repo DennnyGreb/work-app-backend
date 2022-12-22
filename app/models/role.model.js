@@ -1,7 +1,7 @@
 module.exports = (sequelize, Sequelize) => {
   const Role = sequelize.define("role", {
     IdRole: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER,
     },	
     Name: {
       type: Sequelize.STRING
@@ -16,9 +16,9 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.DATE
     },
     Enabled: {
-      type: Sequelize.BOOL
+      type: Sequelize.BOOLEAN
     },
-  });
+  }, { freezeTableName: true });
 
   return Role;
 };

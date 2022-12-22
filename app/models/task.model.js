@@ -1,8 +1,7 @@
 module.exports = (sequelize, Sequelize) => {
   const Task = sequelize.define("task", {
-
     IdTask: {
-      type: Sequelize.DATE
+      type: Sequelize.INTEGER,
     },
     Name: {
       type: Sequelize.STRING
@@ -14,10 +13,10 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING
     },
     IdProject: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     TaskStateId: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     StartDate: {
       type: Sequelize.DATE
@@ -32,9 +31,9 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.DATE
     },
     Enabled: {
-      type: Sequelize.BOOL
+      type: Sequelize.BOOLEAN
     },
-  });
+  }, { freezeTableName: true });
 
   return Task;
 };

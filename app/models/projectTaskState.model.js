@@ -1,18 +1,15 @@
 module.exports = (sequelize, Sequelize) => {
-  const UserProjectRole = sequelize.define("userProjectRole", {
-    IdUserProjectRole: {
+  const ProjectTaskState = sequelize.define("projectTaskState", {
+    IdProjectTaskState: {
       type: Sequelize.INTEGER,
-    },
-    IdUser: {
-      type: Sequelize.INTEGER
     },
     IdProject: {
       type: Sequelize.INTEGER
     },
-    IdRole: {
+    IdTaskState: {
       type: Sequelize.INTEGER
     },
   }, { freezeTableName: true });
 
-  return UserProjectRole;
+  return ProjectTaskState;
 };

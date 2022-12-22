@@ -1,10 +1,10 @@
 module.exports = (sequelize, Sequelize) => {
   const User = sequelize.define("user", {
     IdUser: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER,
     },
     IdCompany: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     Name: {
       type: Sequelize.STRING
@@ -34,9 +34,9 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.DATE
     },
     Enabled: {
-      type: Sequelize.BOOL
+      type: Sequelize.BOOLEAN
     },
-  });
+  }, { freezeTableName: true });
 
   return User;
 };

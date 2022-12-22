@@ -1,15 +1,15 @@
 module.exports = (sequelize, Sequelize) => {
   const UserTask = sequelize.define("userTask", {
     IdUserTask: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     IdUser: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
     IdTask: {
-      type: Sequelize.INT
+      type: Sequelize.INTEGER
     },
-  });
+  }, { freezeTableName: true });
 
   return UserTask;
 };
